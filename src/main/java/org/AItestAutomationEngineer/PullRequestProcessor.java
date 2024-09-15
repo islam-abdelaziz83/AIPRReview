@@ -7,13 +7,11 @@ import com.theokanning.openai.completion.chat.ChatMessageRole;
 import com.theokanning.openai.service.OpenAiService;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.kohsuke.github.*;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-
 
 public class PullRequestProcessor {
 
