@@ -6,30 +6,45 @@ import com.theokanning.openai.completion.chat.ChatMessage;
 import com.theokanning.openai.completion.chat.ChatMessageRole;
 import com.theokanning.openai.service.OpenAiService;
 import io.github.cdimascio.dotenv.Dotenv;
-import org.kohsuke.github.*;
+import org.kohsuke.github.GHIssueState;
+import org.kohsuke.github.GHPullRequest;
+import org.kohsuke.github.GHPullRequestFileDetail;
+import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.GitHub;
+import org.kohsuke.github.GitHubBuilder;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
 public class PullRequestProcessor {
 
     private final String JAVA_GUIDELINES;
-    private final String githubToken;
-    private final String OpenAiApiKey;
     private final GitHub github;
+    private final OpenAiService service; // Added OpenAiService instance
 
     public PullRequestProcessor() throws IOException {
-        JAVA_GUIDELINES = loadInstructionsFile("src/main/instructions/java_guidelines.txt");
+        // Load Java guidelines from file
+        JAVA_GUIDELINES = loadInstructionsFile();
+
+        // Load environment variables
         Dotenv dotenv = Dotenv.load();
-        githubToken = dotenv.get("GITHUB_TOKEN");
-        OpenAiApiKey = dotenv.get("OPENAI_API_KEY");
+        String githubToken = dotenv.get("GITHUB_TOKEN");
+        String openAiApiKey = dotenv.get("OPENAI_API_KEY");
+
+        // Initialize GitHub client
         github = new GitHubBuilder().withOAuthToken(githubToken).build();
+
+        // Initialize OpenAiService
+        Duration timeout = Duration.ofSeconds(60);
+        // Initialize OpenAiService with custom OkHttpClient
+        service = new OpenAiService(openAiApiKey, timeout);
     }
 
-    private String loadInstructionsFile(String filePath) throws IOException {
-        return new String(Files.readAllBytes(Paths.get(filePath)));
+    private String loadInstructionsFile() throws IOException {
+        return new String(Files.readAllBytes(Paths.get("src/main/instructions/java_guidelines.txt")));
     }
 
     private List<GHPullRequest> getOpenPullRequests(String repoName) throws IOException {
@@ -60,7 +75,7 @@ public class PullRequestProcessor {
         return reviewCommentsCount + issueCommentsCount;
     }
 
-    private List<String> processPullRequestData(GHPullRequest pullRequest) throws IOException {
+    private List<String> processPullRequestData(GHPullRequest pullRequest) {
         List<String> changes = new ArrayList<>();
         for (GHPullRequestFileDetail file : pullRequest.listFiles()) {
             if (file.getFilename().endsWith(".java")) {
@@ -78,11 +93,9 @@ public class PullRequestProcessor {
                 List<String> changes = processPullRequestData(pr);
                 List<String> patches = changesToPatch(changes);
                 for (String patch : patches) {
-                    String suggestions = SuggestCommentsUsingAI(patch, JAVA_GUIDELINES);
-                    if ("0".equals(suggestions.trim())) {
-                        // No changes needed, skip commenting
-                        continue;
-                    } else {
+                    String suggestions = suggestCommentsUsingAI(patch, JAVA_GUIDELINES);
+                    assert suggestions != null;
+                    if (!"0".equals(suggestions.trim())) {
                         postComment(repoName, pr.getNumber(), suggestions);
                     }
                 }
@@ -92,21 +105,19 @@ public class PullRequestProcessor {
     }
 
     private List<String> changesToPatch(List<String> changes) {
-        List<String> patches = new ArrayList<>();
-        for (String change : changes) {
-            patches.add(change);
-        }
-        return patches;
+        return new ArrayList<>(changes);
     }
 
-    private String SuggestCommentsUsingAI(String patch, String javaGuidelines) {
-        OpenAiService service = new OpenAiService(OpenAiApiKey);
+    private String suggestCommentsUsingAI(String patch, String javaGuidelines) {
         String prompt = String.format(
-                "Review the following Java code changes according to the Java guidelines:\n%s\n" +
-                        "Provide specific suggestions for improvements based on the guidelines. " +
-                        "Focus on all aspects, including method names, code structure, and best practices.\n" +
-                        "Changes:\n%s\n" +
-                        "If no changes are needed, return 0.",
+                """
+                        As a Software Test Automation Lead, review the following Java code change according to the advanced Java guidelines:
+                        %s
+                        Provide specific suggestions for improvements based on the guidelines. \
+                        Focus on all aspects, including method names, code structure, and best practices.
+                        Code Change:
+                        %s
+                        If no changes are needed, return 0.""",
                 javaGuidelines, patch
         );
 
@@ -119,15 +130,37 @@ public class PullRequestProcessor {
                 .messages(List.of(systemMessage, userMessage))
                 .build();
 
-        ChatCompletionResult result = service.createChatCompletion(chatCompletionRequest);
-        long usedTokens = result.getUsage().getTotalTokens();
-        ChatMessage response = result.getChoices().get(0).getMessage();
+        int maxRetries = 3;
+        int attempt = 0;
+        while (attempt < maxRetries) {
+            try {
+                attempt++;
+                // Use the existing service instance with custom timeouts
+                ChatCompletionResult result = service.createChatCompletion(chatCompletionRequest);
+                long usedTokens = result.getUsage().getTotalTokens();
+                ChatMessage response = result.getChoices().getFirst().getMessage();
 
-        System.out.println("AI Response:\n" + response.getContent());
-        System.out.println("Total tokens used: " + usedTokens);
+                System.out.println("AI Response:\n" + response.getContent());
+                System.out.println("Total tokens used: " + usedTokens);
 
-        return response.getContent();
+                return response.getContent();
+            } catch (Exception e) {
+                System.err.println("Attempt " + attempt + " failed: " + e.getMessage());
+                if (attempt >= maxRetries) {
+                    e.printStackTrace();
+                    return "Error: Unable to get response from OpenAI API after multiple attempts.";
+                }
+                // Wait before retrying
+                try {
+                    Thread.sleep(2000); // Wait 2 seconds before retrying
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+        return null; // This line should not be reached
     }
+
     private void postComment(String repoName, int prNumber, String comment) throws IOException {
         GHRepository repo = github.getRepository(repoName);
         GHPullRequest pr = repo.getPullRequest(prNumber);
