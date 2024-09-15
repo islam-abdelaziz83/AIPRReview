@@ -1,0 +1,13 @@
+•	Method Length: Keep methods concise. If a method exceeds 30 lines, consider refactoring.
+•	Code Duplication: Eliminate duplicate code through abstraction or utility methods.
+•	Magic Numbers and Strings: Replace them with named constants or enums for clarity.
+•	Choose the most appropriate data structures for the task (e.g., ArrayList vs. LinkedList, HashMap vs. TreeMap).
+•	Be mindful of the performance implications of different implementations.
+•	Be vigilant about potential deadlocks; document and adhere to lock acquisition ordering.
+•	Use atomic variables and concurrent data structures where necessary.
+•	Throw exceptions that are specific and informative.
+•	Do not suppress exceptions; handle them appropriately or rethrow them with added context.
+•	Use structured logging with appropriate log levels.
+•	Avoid logging sensitive information.
+•	Ensure that log messages are clear, concise, and provide necessary context.
+•	Implement proper authentication and authorization checks.
