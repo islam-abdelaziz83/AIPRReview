@@ -62,6 +62,10 @@ public class PullRequestProcessor {
         GHRepository repo = github.getRepository(repoName);
         return repo.getPullRequests(GHIssueState.OPEN);
     }
+    private GHPullRequest getOpenPullRequestById(String repoName, Integer prId) throws IOException {
+        GHRepository repo = github.getRepository(repoName);
+        return repo.getPullRequest(prId);
+    }
     public int getPullRequestComments(String repoName, int prNumber) throws IOException {
         GHRepository repo = github.getRepository(repoName);
         GHPullRequest pr = repo.getPullRequest(prNumber);
@@ -97,6 +101,22 @@ public class PullRequestProcessor {
                         // Post the comment directly
                         postReviewComment(pr, codeChange, suggestion, githubToken);
                     }
+                }
+            }
+        }
+    }
+    public void processPullRequests(String repoName, Integer prId) throws IOException {
+        AIModelOperations aiModelOperations = new AIModelOperations();
+        GHPullRequest pr = getOpenPullRequestById(repoName, prId);
+        if (getPullRequestComments(repoName, pr.getNumber()) >= 0) {
+            List<CodeChange> codeChanges = processPullRequestData(pr);
+
+            for (CodeChange codeChange : codeChanges) {
+                String suggestion = aiModelOperations.suggestCommentsUsingAI(codeChange, JAVA_GUIDELINES);
+                assert suggestion != null;
+                if (!"0".equals(suggestion.trim())) {
+                    // Post the comment directly
+                    postReviewComment(pr, codeChange, suggestion, githubToken);
                 }
             }
         }
