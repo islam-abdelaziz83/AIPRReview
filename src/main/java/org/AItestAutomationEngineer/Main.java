@@ -9,7 +9,7 @@ public class Main {
 
         PullRequestProcessor pullRequestProcessor = new PullRequestProcessor();
         try {
-            pullRequestProcessor.processPullRequests("islam-abdelaziz83/AppiumPOC");
+            pullRequestProcessor.processPullRequests("islam-abdelaziz83/AppiumPOC", 5);
         } catch (IOException e) {
             e.printStackTrace();
         }
