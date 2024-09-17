@@ -66,7 +66,8 @@ public class AIModelOperations {
 
                 System.out.println("AI Response:\n" + response.getContent());
                 System.out.println("Total tokens used: " + usedTokens);
-
+                // Allow 2 seconds before sending another message to avoid rate limiting
+                Thread.sleep(2000);
                 return response.getContent();
             } catch (Exception e) {
                 System.err.println("Attempt " + attempt + " failed: " + e.getMessage());
