@@ -25,18 +25,23 @@ public class AIModelOperations {
     public String suggestCommentsUsingAI(CodeChange codeChange, String javaGuidelines) {
         String prompt = String.format(
                 """
-                        As a Software Test Automation Lead, review the following Java code change according to the advanced Java guidelines: \
-                        %s
-                        Provide specific suggestions for improvements based on the guidelines. \
-                        Focus on all aspects, including method names, code structure, and best practices. \
-                        Rules to follow during review: \
-                        1- If there is no code in the provided change, do not add a comment for it in your response. \
-                        2- Focus on the provided code change only, do not add any expression means the code is short or it is better to add more context to your response or comment. \
-                        3- For each comment you would add in your response, the comment must be short as possible. \
-                        4- If no changes are needed, return 0.
-                        Code Change:
-                        %s
-                        """,
+                As a Software Test Automation Lead, review the following Java code change according to the advanced Java guidelines:
+                %s
+        
+                Provide specific suggestions for improvements based on the guidelines.
+                Focus on all aspects, including method names, code structure, and best practices.
+        
+                **Rules to follow during review:**
+                1. **If the provided code change contains no code or is empty line, respond with exactly "0" and do not add any additional text or explanation.**
+                2. **If the provided code change contains code and no changes are needed, respond with exactly "0" and do not add any additional text or explanation.**
+                3. **If the provided code change contains code and suggestions are needed, provide the specific suggestions.**
+                4. **Do not mention anything about the length of the code or the need for more context.**
+                5. **Keep each suggestion as short as possible.**
+                6. **Do not include any greetings, sign-offs, or additional commentary beyond the specific suggestions.**
+        
+                **Code Change:**
+                %s
+                """,
                 javaGuidelines, codeChange.getChangedCode()
         );
 
