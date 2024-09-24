@@ -25,20 +25,29 @@ public class AIModelOperations {
     public String suggestCommentsUsingAI(CodeChange codeChange, String javaGuidelines) {
         String prompt = String.format(
                 """
-                As a Software Test Automation Lead, review the following Java code change according to the advanced Java guidelines:
+                As a **Senior Test Automation Engineer**, review the following Java code change, which is part of a **test automation framework** built using **Java**, **Selenium**, **Maven**, and **TestNG**. Refer to the advanced Java guidelines and the specific best practices for test automation frameworks:
+            
                 %s
-        
-                Provide specific suggestions for improvements based on the guidelines.
-                Focus on all aspects, including method names, code structure, and best practices.
-        
+            
+                Provide specific suggestions for improvements based on these guidelines. Focus on all aspects, including:
+            
+                - Test case design and structure
+                - Proper use of Selenium WebDriver methods
+                - Synchronization and waits
+                - Use of TestNG annotations and configurations
+                - Code readability and maintainability
+                - Exception handling specific to automation testing
+                - Adherence to the Page Object Model (if applicable)
+            
                 **Rules to follow during review:**
-                1. **If the provided code change contains no code or is empty line, respond with exactly "0" and do not add any additional text or explanation.**
+            
+                1. **If the provided code change contains no code or is empty, respond with exactly "0" and do not add any additional text or explanation.**
                 2. **If the provided code change contains code and no changes are needed, respond with exactly "0" and do not add any additional text or explanation.**
                 3. **If the provided code change contains code and suggestions are needed, provide the specific suggestions.**
                 4. **Do not mention anything about the length of the code or the need for more context.**
                 5. **Keep each suggestion as short as possible.**
                 6. **Do not include any greetings, sign-offs, or additional commentary beyond the specific suggestions.**
-        
+            
                 **Code Change:**
                 %s
                 """,
