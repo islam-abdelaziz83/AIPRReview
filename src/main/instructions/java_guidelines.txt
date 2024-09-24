@@ -11,3 +11,23 @@
 •	Avoid logging sensitive information.
 •	Ensure that log messages are clear, concise, and provide necessary context.
 •	Implement proper authentication and authorization checks.
+•	Use of Page Object Model (POM): -
+	•	Organize page elements and actions within dedicated page classes.
+	•	Avoid locating elements directly within test methods.
+	•	Synchronization:
+	•	Use explicit waits (WebDriverWait) instead of implicit waits or Thread.sleep().
+	•	Ensure that tests are robust against varying page load times.
+	•	TestNG Annotations:
+	•	Use appropriate TestNG annotations (@BeforeClass, @AfterMethod, etc.) for test setup and teardown.
+	•	Group tests logically using TestNG groups.
+	•	Exception Handling:
+	•	Handle exceptions specific to Selenium (e.g., NoSuchElementException) appropriately.
+	•	Avoid empty catch blocks; log exceptions for debugging.
+	•	Coding Practices:
+	•	Avoid hard-coded values; use configuration files or constants.
+	•	Ensure that tests are independent and can run in any order.
+	•	Logging and Reporting:
+	•	Integrate logging frameworks (e.g., Log4j) for better traceability.
+	•	Use reporting tools to generate test execution reports.
+	•	Resource Cleanup:
+	•	Ensure that web drivers are properly closed after test execution.
