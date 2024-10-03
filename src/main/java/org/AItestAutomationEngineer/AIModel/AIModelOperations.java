@@ -59,7 +59,7 @@ public class AIModelOperations {
 
         ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest
                 .builder()
-                .model("gpt-4")
+                .model("gpt-4o-2024-08-06")
                 .messages(List.of(systemMessage, userMessage))
                 .build();
 
